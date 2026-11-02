@@ -144,25 +144,6 @@ export function documentTools(server: McpServer, scopes: string[]) {
             if (query) {
               const searchProvider = SearchProviderManager.getProvider();
 
-              // If the query looks like a document ID or urlId, try direct
-              // lookup first so exact matches appear at the top of results.
-              let exactMatch: Document | null = null;
-              if (UrlHelper.SLUG_URL_REGEX.test(query)) {
-                exactMatch = await Document.findByPk(query, {
-                  userId: user.id,
-                });
-                if (exactMatch && !can(user, "read", exactMatch)) {
-                  exactMatch = null;
-                }
-                if (
-                  exactMatch &&
-                  collectionId &&
-                  exactMatch.collectionId !== collectionId
-                ) {
-                  exactMatch = null;
-                }
-              }
-
               const searchStartedAt = Date.now();
               const searchFilters: Filter[] = [];
               if (!includeArchived) {
@@ -185,28 +166,32 @@ export function documentTools(server: McpServer, scopes: string[]) {
                   value: input.ownerId,
                 });
               }
-              const { results, total } = await searchProvider.searchForUser(
-                user,
-                {
-                  query,
-                  filter: combineFilters(searchFilters),
-                  offset: effectiveOffset,
-                  limit: effectiveLimit,
-                }
-              );
+              const [{ results, total }, exactMatchCandidate] =
+                await Promise.all([
+                  searchProvider.searchForUser(user, {
+                    query,
+                    filter: combineFilters(searchFilters),
+                    offset: effectiveOffset,
+                    limit: effectiveLimit,
+                  }),
 
-              // Only record the first page of results to avoid duplicate
-              // records as the client pages through results.
-              if (effectiveOffset === 0) {
-                await SearchQuery.record({
-                  userId: user.id,
-                  teamId: user.teamId,
-                  source: SearchQuerySource.MCP,
-                  query,
-                  results: total,
-                  duration: Date.now() - searchStartedAt,
-                });
-              }
+                  // If the query looks like a document ID or urlId, try direct
+                  // lookup so exact matches appear at the top of results.
+                  UrlHelper.SLUG_URL_REGEX.test(query)
+                    ? Document.findByPk(query, { userId: user.id })
+                    : null,
+                ]);
+              const duration = Date.now() - searchStartedAt;
+
+              const exactMatch =
+                exactMatchCandidate &&
+                can(user, "read", exactMatchCandidate) &&
+                (!collectionId ||
+                  exactMatchCandidate.collectionId === collectionId) &&
+                (!input.ownerId ||
+                  exactMatchCandidate.ownerIds?.includes(input.ownerId))
+                  ? exactMatchCandidate
+                  : null;
 
               const filteredResults = results.filter(
                 (result) => result.document.id !== exactMatch?.id
@@ -221,6 +206,19 @@ export function documentTools(server: McpServer, scopes: string[]) {
                   user.team,
                   matchedDocuments.map((doc) => doc.id)
                 ),
+
+                // Only record the first page of results to avoid duplicate
+                // records as the client pages through results.
+                effectiveOffset === 0
+                  ? SearchQuery.record({
+                      userId: user.id,
+                      teamId: user.teamId,
+                      source: SearchQuerySource.MCP,
+                      query,
+                      results: total,
+                      duration,
+                    })
+                  : undefined,
               ]);
 
               const presented = await Promise.all(
