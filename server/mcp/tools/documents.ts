@@ -189,7 +189,10 @@ export function documentTools(server: McpServer, scopes: string[]) {
                 (!collectionId ||
                   exactMatchCandidate.collectionId === collectionId) &&
                 (!input.ownerId ||
-                  exactMatchCandidate.ownerIds?.includes(input.ownerId))
+                  exactMatchCandidate.ownerIds?.includes(input.ownerId) ||
+                  exactMatchCandidate.collection?.ownerIds?.includes(
+                    input.ownerId
+                  ))
                   ? exactMatchCandidate
                   : null;
 
