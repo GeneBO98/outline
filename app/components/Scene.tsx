@@ -3,6 +3,7 @@ import styled from "styled-components";
 import CenteredContent from "~/components/CenteredContent";
 import Header from "~/components/Header";
 import PageTitle from "~/components/PageTitle";
+import { EditorStyleHelper } from "@shared/editor/styles/EditorStyleHelper";
 
 type Props = {
   /** An icon to display in the header when content has scrolled past the title */
@@ -19,6 +20,11 @@ type Props = {
   centered?: boolean;
   /** Whether to use the full width of the screen (default: false) */
   wide?: boolean;
+  /**
+   * Width of the page content that the header aligns with. Defaults to the
+   * standard width when centered, use it when the scene centers its own content.
+   */
+  contentWidth?: string;
   /** The content of the scene */
   children?: React.ReactNode;
 };
@@ -32,6 +38,7 @@ const Scene: React.FC<Props> = ({
   children,
   centered,
   wide,
+  contentWidth,
 }: Props) => (
   <FillWidth>
     <PageTitle title={textTitle ?? (typeof title === "string" ? title : "")} />
@@ -48,6 +55,12 @@ const Scene: React.FC<Props> = ({
       }
       actions={actions}
       left={left}
+      contentWidth={
+        contentWidth ??
+        (centered !== false && !wide
+          ? EditorStyleHelper.documentWidth
+          : undefined)
+      }
     />
     {centered !== false ? (
       <CenteredContent maxWidth={wide ? "100vw" : undefined} withStickyHeader>

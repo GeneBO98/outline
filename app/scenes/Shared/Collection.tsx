@@ -3,6 +3,7 @@ import { EditIcon } from "outline-icons";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { EditorStyleHelper } from "@shared/editor/styles/EditorStyleHelper";
 import { breakpoint } from "@shared/styles/breakpoint";
 import { IconTitleWrapper } from "@shared/components/Icon";
 import useShare from "@shared/hooks/useShare";
@@ -55,6 +56,7 @@ function SharedCollection({ collection }: Props) {
   return (
     <Scene
       centered={false}
+      contentWidth={EditorStyleHelper.documentWidth}
       textTitle={collection.displayName}
       left={<div />}
       title={

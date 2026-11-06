@@ -8,7 +8,6 @@ import {
   KeyboardIcon,
   EmailIcon,
   LogoutIcon,
-  ProfileIcon,
   BrowserIcon,
   DraftsIcon,
   BugIcon,
@@ -130,12 +129,12 @@ export const navigateToImport = createInternalLinkAction({
   to: settingsPath("import"),
 });
 
-export const navigateToProfileSettings = createInternalLinkAction({
-  name: ({ t }) => t("Profile"),
-  analyticsName: "Navigate to profile settings",
+export const navigateToAccountSettings = createInternalLinkAction({
+  name: ({ t }) => t("Settings"),
+  analyticsName: "Navigate to account settings",
   section: NavigationSection,
   iconInContextMenu: false,
-  icon: <ProfileIcon />,
+  icon: <SettingsIcon />,
   to: settingsPath(),
 });
 
@@ -147,15 +146,6 @@ export const navigateToNotificationSettings = createInternalLinkAction({
   iconInContextMenu: false,
   icon: <EmailIcon />,
   to: settingsPath("notifications"),
-});
-
-export const navigateToAccountPreferences = createInternalLinkAction({
-  name: ({ t }) => t("Preferences"),
-  analyticsName: "Navigate to account preferences",
-  section: NavigationSection,
-  iconInContextMenu: false,
-  icon: <SettingsIcon />,
-  to: settingsPath("preferences"),
 });
 
 export const openDocumentation = createExternalLinkAction({

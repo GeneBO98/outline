@@ -7,7 +7,9 @@ import useMeasure from "react-use-measure";
 import styled, { useTheme } from "styled-components";
 import Icon from "@shared/components/Icon";
 import { HEADER_HEIGHT } from "@shared/constants";
+import { EditorStyleHelper } from "@shared/editor/styles/EditorStyleHelper";
 import { s } from "@shared/styles";
+import { breakpoint } from "@shared/styles/breakpoint";
 import { altDisplay, metaDisplay } from "@shared/utils/keyboard";
 import { publishDocument } from "~/actions/definitions/documents";
 import { restoreRevision } from "~/actions/definitions/revisions";
@@ -169,6 +171,9 @@ function DocumentHeader({
       ref={measureRef}
       $hidden={isEditingFocus}
       hasSidebar
+      contentWidth={
+        document.fullWidth ? undefined : "var(--header-content-width)"
+      }
       left={
         isMobile ? null : (
           <DocumentBreadcrumb document={document}>
@@ -303,7 +308,14 @@ function DocumentHeader({
 }
 
 const StyledHeader = styled(Header)<{ $hidden: boolean }>`
+  /* Matches the editor text column in Document so actions align with the text. */
+  --header-content-width: 46em;
   transition: opacity 500ms ease-in-out;
+
+  ${breakpoint("desktopLarge")`
+    --header-content-width: ${EditorStyleHelper.documentWidth};
+  `};
+
   ${(props) => props.$hidden && "opacity: 0;"}
 `;
 

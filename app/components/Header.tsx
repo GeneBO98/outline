@@ -38,11 +38,25 @@ type Props = {
     | ((props: { isCompact: boolean }) => React.ReactNode)
     | React.ReactNode;
   hasSidebar?: boolean;
+  /**
+   * Maximum width of the header contents, matching the width of the page
+   * content so that breadcrumbs and actions align with it on wide screens.
+   * Accepts any CSS length. Omit to span the full width.
+   */
+  contentWidth?: string;
   className?: string;
   ref?: React.Ref<HTMLDivElement>;
 };
 
-function Header({ left, title, actions, hasSidebar, className, ref }: Props) {
+function Header({
+  left,
+  title,
+  actions,
+  hasSidebar,
+  contentWidth,
+  className,
+  ref,
+}: Props) {
   const { ui } = useStores();
   const { t } = useTranslation();
   const { pane, isSplitView } = useSplitView();
@@ -103,6 +117,7 @@ function Header({ left, title, actions, hasSidebar, className, ref }: Props) {
         $passThrough={passThrough}
         $insetTitleAdjust={ui.sidebarIsClosed && Desktop.hasInsetTitlebar()}
         $scrollbarInset={isAtWindowEnd ? scrollbarWidth : undefined}
+        $contentWidth={contentWidth}
       >
         {hasDesktopSidebar && (
           <SidebarToggle
@@ -126,40 +141,42 @@ function Header({ left, title, actions, hasSidebar, className, ref }: Props) {
             </Tooltip>
           </SidebarToggle>
         )}
-        {left || hasMobileSidebar ? (
-          <Breadcrumbs ref={setBreadcrumbRef}>
-            {hasMobileSidebar && (
-              <MobileMenuButton
-                onClick={ui.toggleMobileSidebar}
-                icon={<MenuIcon />}
-                neutral
-              />
-            )}
-            {left}
-          </Breadcrumbs>
-        ) : null}
+        <Inner align="center">
+          {left || hasMobileSidebar ? (
+            <Breadcrumbs ref={setBreadcrumbRef}>
+              {hasMobileSidebar && (
+                <MobileMenuButton
+                  onClick={ui.toggleMobileSidebar}
+                  icon={<MenuIcon />}
+                  neutral
+                />
+              )}
+              {left}
+            </Breadcrumbs>
+          ) : null}
 
-        {isScrolled && !isCompact ? (
-          <Title onClick={handleClickTitle}>
-            <Fade>{title}</Fade>
-          </Title>
-        ) : (
-          <div />
-        )}
-        <Actions align="center" justify="flex-end">
-          {typeof actions === "function" ? actions({ isCompact }) : actions}
-          {isSplitView && (
-            <Tooltip content={t("Close pane")} side="bottom">
-              <CloseSplitPaneButton
-                aria-label={t("Close pane")}
-                onClick={handleCloseSplitPane}
-                icon={<CloseIcon />}
-                neutral
-                borderOnHover
-              />
-            </Tooltip>
+          {isScrolled && !isCompact ? (
+            <Title onClick={handleClickTitle}>
+              <Fade>{title}</Fade>
+            </Title>
+          ) : (
+            <div />
           )}
-        </Actions>
+          <Actions align="center" justify="flex-end">
+            {typeof actions === "function" ? actions({ isCompact }) : actions}
+            {isSplitView && (
+              <Tooltip content={t("Close pane")} side="bottom">
+                <CloseSplitPaneButton
+                  aria-label={t("Close pane")}
+                  onClick={handleCloseSplitPane}
+                  icon={<CloseIcon />}
+                  neutral
+                  borderOnHover
+                />
+              </Tooltip>
+            )}
+          </Actions>
+        </Inner>
       </Wrapper>
     </TooltipProvider>
   );
@@ -268,8 +285,21 @@ const Actions = styled(Flex)`
   `};
 `;
 
+/** Holds the breadcrumbs, title and actions, constrained to the content width. */
+const Inner = styled(Flex)`
+  flex-grow: 1;
+  min-width: 0;
+  justify-content: flex-start;
+
+  ${breakpoint("tablet")`
+    grid-column: 2;
+  `};
+`;
+
 type WrapperProps = {
   $passThrough?: boolean;
+  /** Maximum width of the header contents, see Header contentWidth prop. */
+  $contentWidth?: string;
   $insetTitleAdjust?: boolean;
   /** Width of the window scrollbar that the end of the header falls behind. */
   $scrollbarInset?: number;
@@ -370,6 +400,14 @@ const Wrapper = styled(Flex)<WrapperProps>`
     padding: 12px;
     padding-inline-end: ${endPadding(12)};
     ${(props: WrapperProps) => props.$insetTitleAdjust && `padding-left: 64px;`}
+
+    /* The middle column matches the centered page content, the sidebar toggle stays at the start. */
+    ${(props: WrapperProps) =>
+      props.$contentWidth &&
+      `
+      display: grid;
+      grid-template-columns: minmax(auto, 1fr) minmax(0, ${props.$contentWidth}) minmax(0, 1fr);
+      `}
     `};
 `;
 

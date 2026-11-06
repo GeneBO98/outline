@@ -2,8 +2,7 @@ import { observer } from "mobx-react";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import {
-  navigateToProfileSettings,
-  navigateToAccountPreferences,
+  navigateToAccountSettings,
   openKeyboardShortcuts,
   openChangelog,
   openDocumentation,
@@ -34,8 +33,7 @@ const AccountMenu: React.FC<Props> = ({ children }: Props) => {
       openFeedbackUrl,
       openBugReportUrl,
       changeTheme,
-      navigateToProfileSettings,
-      navigateToAccountPreferences,
+      navigateToAccountSettings,
       ActionSeparator,
       logout,
     ],
